@@ -1,0 +1,20 @@
+{
+  "name": "routinemaker",
+  "version": "1.0.0",
+  "description": "My databases project for CS3200",
+  "main": "app.js",
+  "type": "module",
+  "scripts": {
+    "dev": "npx nodemon app.js",
+    "test": "npx jest tests/database.exercise.test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "mysql2": "^3.11.4"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}

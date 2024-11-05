@@ -1,3 +1,4 @@
+DROP DATABASE IF EXISTS routines;
 CREATE DATABASE routines;
 USE routines;
 
@@ -11,7 +12,7 @@ CREATE TABLE exercise (
     name VARCHAR(255) PRIMARY KEY,
     difficulty int NOT NULL CHECK (difficulty BETWEEN 1 AND 5),
     time_estimate int NOT NULL CHECK (time_estimate > 0),
-    bookmarked boolean NOT NULL
+    bookmarked boolean NOT NULL DEFAULT false
 );
 
 DROP TABLE IF EXISTS equipment_exercise;
@@ -32,24 +33,24 @@ DROP TABLE IF EXISTS muscle;
 CREATE TABLE muscle (
     name VARCHAR(255) PRIMARY KEY,
     muscle_group_name VARCHAR(255) NOT NULL,
-    FOREIGN KEY (muscle_group_name) REFERENCES (muscle_group);
+    FOREIGN KEY (muscle_group_name) REFERENCES muscle_group(name)
 );
 
 DROP TABLE IF EXISTS exercise_muscle;
 CREATE TABLE exercise_muscle (
     exercise_name VARCHAR(255) NOT NULL,
     muscle_name VARCHAR(255) NOT NULL,
-    focus DECIMAL(3, 2) NOT NULL DEFAULT 1.00 CHECK (focus BETWEEN 0.00 AND 1.00)
-    PRIMARY KEY (exercise_name, muscle_name)
-    FOREIGN KEY (exercise_name) REFERENCES exercise(name)
+    focus DECIMAL(3, 2) NOT NULL DEFAULT 1.00 CHECK (focus BETWEEN 0.00 AND 1.00),
+    PRIMARY KEY (exercise_name, muscle_name),
+    FOREIGN KEY (exercise_name) REFERENCES exercise(name),
     FOREIGN KEY (muscle_name) REFERENCES muscle(name)
 );
 
 DROP TABLE IF EXISTS routine;
 CREATE TABLE routine (
     name VARCHAR(255) PRIMARY KEY,
-    est_duration INT NOT NULL, -- DERIVED ATTRIBUTE, TO BE IMPLEMENTED LATER --
-    overall_intensity INT NOT NULL, -- DERIVED ATTRIBUTE, TO BE IMPLEMENTED LATER --
+    est_duration INT NOT NULL DEFAULT 0, -- DERIVED ATTRIBUTE, TO BE IMPLEMENTED LATER --
+    overall_intensity INT NOT NULL DEFAULT 0, -- DERIVED ATTRIBUTE, TO BE IMPLEMENTED LATER --
     bookmarked BOOLEAN NOT NULL
 );
 
@@ -108,3 +109,10 @@ BEGIN
                             END
     WHERE name = NEW.routine_name;
 END $$
+
+INSERT INTO exercise (name, difficulty, time_estimate) VALUES ('Bench Press', 4, 3);
+INSERT INTO exercise_muscle(exercise_name, muscle_name, focus) VALUES ('Bench Press', 'Mid Chest', 0.60)
+INSERT INTO exercise_muscle(exercise_name, muscle_name, focus) VALUES ('Bench Press', 'Tricep Long Head', 0.10);
+INSERT INTO exercise_muscle(exericse_name, muscle_name, focus) VALUES ('Bench Press', 'Tricep Lateral Head', 0.10);
+INSERT INTO exercise_muscle(exercise_name, muscle_name, focus) VALUES ('Bench Press', 'Front Delt', 0.20);
+INSERT INTO exercise (name, difficulty, time_estimate) VALUES ('Bicep Curl', 2, 2);
