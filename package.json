@@ -3,10 +3,9 @@
   "version": "1.0.0",
   "description": "My databases project for CS3200",
   "main": "app.js",
-  "type": "module",
   "scripts": {
     "dev": "npx nodemon app.js",
-    "test": "npx jest tests/database.exercise.test.js"
+    "test": "npx jest tests"
   },
   "keywords": [],
   "author": "",
@@ -15,6 +14,9 @@
     "mysql2": "^3.11.4"
   },
   "devDependencies": {
-    "jest": "^29.7.0"
+    "express": "5.0.1",
+    "jest": "^29.7.0",
+    "mysql2": "^3.11.3",
+    "supertest": "^7.0.0"
   }
 }
