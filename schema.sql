@@ -33,7 +33,7 @@ DROP TABLE IF EXISTS muscle;
 CREATE TABLE muscle (
     name VARCHAR(255) PRIMARY KEY,
     muscle_group_name VARCHAR(255) NOT NULL,
-    FOREIGN KEY (muscle_group_name) REFERENCES muscle_group(name)
+    FOREIGN KEY (muscle_group_name) REFERENCES muscle_group(name) ON DELETE CASCADE
 );
 
 DROP TABLE IF EXISTS exercise_muscle;
@@ -42,8 +42,8 @@ CREATE TABLE exercise_muscle (
     muscle_name VARCHAR(255) NOT NULL,
     focus DECIMAL(3, 2) NOT NULL DEFAULT 1.00 CHECK (focus BETWEEN 0.00 AND 1.00),
     PRIMARY KEY (exercise_name, muscle_name),
-    FOREIGN KEY (exercise_name) REFERENCES exercise(name),
-    FOREIGN KEY (muscle_name) REFERENCES muscle(name)
+    FOREIGN KEY (exercise_name) REFERENCES exercise(name) ON DELETE CASCADE,
+    FOREIGN KEY (muscle_name) REFERENCES muscle(name) ON DELETE CASCADE
 );
 
 DROP TABLE IF EXISTS routine;
@@ -51,7 +51,7 @@ CREATE TABLE routine (
     name VARCHAR(255) PRIMARY KEY,
     est_duration INT NOT NULL DEFAULT 0, -- DERIVED ATTRIBUTE, TO BE IMPLEMENTED LATER --
     overall_intensity INT NOT NULL DEFAULT 0, -- DERIVED ATTRIBUTE, TO BE IMPLEMENTED LATER --
-    bookmarked BOOLEAN NOT NULL
+    bookmarked BOOLEAN NOT NULL DEFAULT false
 );
 
 DROP TABLE IF EXISTS routine_exercise; 
@@ -60,8 +60,8 @@ CREATE TABLE routine_exercise (
     exercise_name VARCHAR(255) NOT NULL,
     num_sets INT NOT NULL CHECK (num_sets > 0),
     PRIMARY KEY(routine_name, exercise_name),
-    FOREIGN KEY(routine_name) REFERENCES routine(name),
-    FOREIGN KEY(exercise_name) REFERENCES exercise(name)
+    FOREIGN KEY(routine_name) REFERENCES routine(name) ON DELETE CASCADE,
+    FOREIGN KEY(exercise_name) REFERENCES exercise(name) ON DELETE CASCADE
 );
 
 DROP TABLE IF EXISTS routine_muscle;
@@ -70,8 +70,8 @@ CREATE TABLE routine_muscle (
     muscle_name VARCHAR(255) NOT NULL,
     focus DECIMAL(3, 2) NOT NULL DEFAULT 1.00 CHECK (focus BETWEEN 0.00 AND 1.00),
     PRIMARY KEY(routine_name, muscle_name),
-    FOREIGN KEY(routine_name) REFERENCES routine(name),
-    FOREIGN KEY(muscle_name) REFERENCES muscle(name)
+    FOREIGN KEY(routine_name) REFERENCES routine(name) ON DELETE CASCADE,
+    FOREIGN KEY(muscle_name) REFERENCES muscle(name) ON DELETE CASCADE
 );
 
 DROP TABLE IF EXISTS routine_muscle_group;
@@ -80,8 +80,8 @@ CREATE TABLE routine_muscle_group (
     muscle_group_name VARCHAR(255) NOT NULL,
     focus DECIMAL(3, 2) NOT NULL DEFAULT 1.00 CHECK (focus BETWEEN 0.00 AND 1.00),
     PRIMARY KEY(routine_name, muscle_group_name),
-    FOREIGN KEY(routine_name) REFERENCES routine(name),
-    FOREIGN KEY(muscle_group_name) REFERENCES muscle_group(name)
+    FOREIGN KEY(routine_name) REFERENCES routine(name) ON DELETE CASCADE,
+    FOREIGN KEY(muscle_group_name) REFERENCES muscle_group(name) ON DELETE CASCADE
 );
 
 DELIMITER $$
@@ -110,9 +110,21 @@ BEGIN
     WHERE name = NEW.routine_name;
 END $$
 
+DELIMITER $$
+CREATE TRIGGER update_exercise_trigger
+AFTER UPDATE ON exercise
+FOR EACH ROW
+BEGIN
+    UPDATE routine_exercise
+    SET num_sets = num_sets -- Dummy update to trigger routine calculations--
+    WHERE exercise_name = NEW.name;
+END $$
+
+DELIMITER;
+
 INSERT INTO exercise (name, difficulty, time_estimate) VALUES ('Bench Press', 4, 3);
 INSERT INTO exercise_muscle(exercise_name, muscle_name, focus) VALUES ('Bench Press', 'Mid Chest', 0.60)
 INSERT INTO exercise_muscle(exercise_name, muscle_name, focus) VALUES ('Bench Press', 'Tricep Long Head', 0.10);
-INSERT INTO exercise_muscle(exericse_name, muscle_name, focus) VALUES ('Bench Press', 'Tricep Lateral Head', 0.10);
+INSERT INTO exercise_muscle(exercise_name, muscle_name, focus) VALUES ('Bench Press', 'Tricep Lateral Head', 0.10);
 INSERT INTO exercise_muscle(exercise_name, muscle_name, focus) VALUES ('Bench Press', 'Front Delt', 0.20);
 INSERT INTO exercise (name, difficulty, time_estimate) VALUES ('Bicep Curl', 2, 2);

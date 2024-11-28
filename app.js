@@ -6,7 +6,7 @@ app.use(express.json());
 
 app.get("/exercise/:name", async (req, res) => {
     const name = req.params.name;
-    const exercise = await getExercise(name);
+    const [exercise] = await getExercise(name);
     if (!exercise || exercise.length === 0) {
         return res.status(404).send({ error: "Exercise not found" });
     }
@@ -38,11 +38,15 @@ app.post("/exercise", async (req, res) => {
     }
 });
 
-app.post("/notes", async (req, res) => {
-    const {title, contents} = req.body;
-    const note = await createNote(title, contents);
-    res.status(201).send(note);
-});
+app.delete("/exercise", async (req, res) => {
+    const {name, difficulty, time_estimate} = req.body;
+    try {
+        const exercise = await removeExercise(name, difficulty, time_estimate);
+    } catch (error) {
+        console.error("Error creating exercise:", error);
+        res.status(500).send({ error: "An error occured while removing the exercise."});
+    }
+})
 
 app.use((err, req, res, next) => {
     console.error(err.stack);

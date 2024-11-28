@@ -3,19 +3,19 @@ const app = require('../app');
 const { pool } = require('../database');
 
 beforeAll(async () => {
-    await pool.query(`INSERT INTO exercise (name, difficulty, time_estimate) VALUES ('Squat', 2, 3)`);
+    await pool.query(`INSERT INTO exercise (name, difficulty, time_estimate) VALUES ('Deadlift', 2, 3)`);
 });
 
 afterAll(async () => {
-    await pool.query(`DELETE FROM exercise WHERE name = 'Squat'`);
+    await pool.query(`DELETE FROM exercise WHERE name = 'Deadlift'`);
     await pool.end();
 });
 
 describe('Test getting exercise by name', () => {
     it('Should be able to retrieve an exercise by name', async () => {
-        const response = await request(app).get('/exercise/Squat');
+        const response = await request(app).get('/exercise/Deadlift');
         expect(response.status).toBe(200);
-        expect(response.body).toHaveProperty('name', 'Squat');
+        expect(response.body).toHaveProperty('name', 'Deadlift');
         expect(response.body).toHaveProperty('difficulty', 2);
         expect(response.body).toHaveProperty('time_estimate', 3)
     });

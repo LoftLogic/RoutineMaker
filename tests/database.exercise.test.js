@@ -1,4 +1,4 @@
-const { pool, getExercise, bookmarkExercise } = require('../database.js');
+const { pool, getExercise, bookmarkExercise, removeExercise, getAllExercises } = require('../database.js');
 const mysql = require('mysql2');
 
 beforeAll(async () => {
@@ -11,7 +11,6 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-    // Cleanup: Remove the test data from the database
     await pool.query(`DELETE FROM exercise WHERE name = ?`, ['Test1']);
     await pool.end();
 });
@@ -39,5 +38,19 @@ describe('Test bookmark Exercise', () => {
         await bookmarkExercise("Test1");
         const [after] = await getExercise("Test1");
         expect(after['bookmarked']).toBeTruthy();
+    })
+})
+
+describe('Test deleting Exercises', () => {
+    it('Test remvoing Test1', async () => {
+        await removeExercise("Test1");
+        const [exercise] = await getExercise("Test1");
+        expect(exercise).toBeUndefined();
+    })
+    it('Test removing nothing', async () => {
+        before = await getAllExercises();
+        await removeExercise("DOESNT EXIST");
+        after = await getAllExercises();
+        expect(before).toEqual(after);
     })
 })
