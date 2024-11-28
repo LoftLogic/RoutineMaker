@@ -42,6 +42,7 @@ app.delete("/exercise", async (req, res) => {
     const {name, difficulty, time_estimate} = req.body;
     try {
         const exercise = await removeExercise(name, difficulty, time_estimate);
+        return exercise;
     } catch (error) {
         console.error("Error creating exercise:", error);
         res.status(500).send({ error: "An error occured while removing the exercise."});
