@@ -1,5 +1,14 @@
 const mysql = require('mysql2');
 
+const MUSCLEGROUPS = {
+    "Chest": ["Mid Chest", "Upper Chest", "Lower Chest"], 
+    "Shoulder": ["Front Delt", "Side Delt", "Rear Delt"],
+    "Tricep": ["Tricep Long Head", "Tricep Lateral Head"],
+    "Bicep": ["Bicep Long Head", "Bicep Short Head"],
+    "Back": ["Upper Back", "Lats", "Traps"],
+    "Legs": ["Quads", "Hamstrings", "Glutes", "Calves"]
+};
+
 const pool = mysql.createPool({
     host: '127.0.0.1',
     user: 'root',
@@ -119,11 +128,76 @@ async function updateRoutine(name, newName) {
     return result;
 }
 
-async function addExerciseMuscleFocus(exercise, muscle, focus) {
+async function getExerciseMuscleFocus(exercise, muscle) {
+    const [result] = await pool.query(`SELECT * FROM exercise_muscle WHERE exercise_name = ? AND muscle_name = ?`, 
+        [exercise, muscle]);
+    return result;
+}
+
+
+async function createExerciseMuscleFocus(exercise, muscle, focus) {
     const result = await pool.query(`INSERT INTO exercise_muscle(exercise_name, muscle_name, focus) 
     VALUES (?, ?, ?)`, [exercise, muscle, focus]);
     return result;
 }
 
+async function removeExerciseMuscleFocus(exercise, muscle) {
+    return await pool.query(`DELETE FROM exercise_muscle WHERE exercise_name = ? AND muscle_name = ?`,
+        [exercise, muscle]);
+}
+
+async function changeFocusLevel(exercise, muscle, newFocus) {
+    return await pool.query(`UPDATE exercise_muscle SET focus = ? WHERE exercise_name = ? AND muscle_name = ?`, 
+        [newFocus, exercise, muscle]);
+}
+
+async function createExerciseRoutine(routine, exercise, numSets) {
+    const [result] = await pool.query(`INSERT INTO routine_exercise(routine_name, exercise_name, num_sets) VALUES (?, ?, ?)`,
+        [routine, exercise, numSets]);
+    return result;
+}
+
+async function getExerciseRoutine(routine, exercise) {
+    const [result] = await pool.query(`SELECT * FROM routine_exercise WHERE routine_name = ? AND exercise_name = ?`,
+    [routine, exercise]);
+    return result;
+}
+
+async function removeExerciseRoutine(routine, exercise) {
+    const [result] = await pool.query(`DELETE FROM routine_exercise WHERE routine_name = ? AND exercise_name = ?`,
+    [routine, exercise]);
+    return result;
+}
+
+async function changeNumSets(routine, exercise, numSets) {
+    const [result] = await pool.query(`UPDATE routine_exercise SET num_sets = ? WHERE routine_name = ? AND exercise_name = ?`,
+    [numSets, routine, exercise]);
+    return result;
+}
+
+async function createEquipmentExercise(equipment, exercise) {
+    const [result] = await pool.query(`INSERT INTO equipment_exercise(equipment_name, exercise_name) VALUES (?, ?)`,
+    [equipment, exercise]);
+    return result;
+}
+
+async function getEquipmentExercise(equipment, exercise) {
+    const [result] = await pool.query(`SELECT * FROM equipment_exercise WHERE equipment_name = ? AND exercise_name = ?`,
+    [equipment, exercise]);
+    return result;
+}
+
+async function removeEquipmentExercise(equipment, exercise) {
+    const [result] = await pool.query(`DELETE FROM equipment_exercise WHERE equipment_name = ? AND exercise_name = ?`,
+    [equipment, exercise]);
+    return result;
+}
+
+
+
+
 module.exports = { pool, getExercise, getAllExercises, bookmarkExercise, createExercise, removeExercise, 
-    changeExercise, getRoutine, createRoutine, bookmarkRoutine, removeRoutine, updateRoutine, addExerciseMuscleFocus };
+    changeExercise, getRoutine, createRoutine, bookmarkRoutine, removeRoutine, updateRoutine, 
+    getExerciseMuscleFocus, createExerciseMuscleFocus, removeExerciseMuscleFocus, changeFocusLevel,
+    createExerciseRoutine, getExerciseRoutine, removeExerciseRoutine, changeNumSets,
+    createEquipmentExercise, getEquipmentExercise, removeEquipmentExercise };

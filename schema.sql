@@ -64,26 +64,6 @@ CREATE TABLE routine_exercise (
     FOREIGN KEY(exercise_name) REFERENCES exercise(name) ON DELETE CASCADE
 );
 
-DROP TABLE IF EXISTS routine_muscle;
-CREATE TABLE routine_muscle (
-    routine_name VARCHAR(255) NOT NULL,
-    muscle_name VARCHAR(255) NOT NULL,
-    focus DECIMAL(3, 2) NOT NULL DEFAULT 1.00 CHECK (focus BETWEEN 0.00 AND 1.00),
-    PRIMARY KEY(routine_name, muscle_name),
-    FOREIGN KEY(routine_name) REFERENCES routine(name) ON DELETE CASCADE,
-    FOREIGN KEY(muscle_name) REFERENCES muscle(name) ON DELETE CASCADE
-);
-
-DROP TABLE IF EXISTS routine_muscle_group;
-CREATE TABLE routine_muscle_group (
-    routine_name VARCHAR(255) NOT NULL,
-    muscle_group_name VARCHAR(255) NOT NULL,
-    focus DECIMAL(3, 2) NOT NULL DEFAULT 1.00 CHECK (focus BETWEEN 0.00 AND 1.00),
-    PRIMARY KEY(routine_name, muscle_group_name),
-    FOREIGN KEY(routine_name) REFERENCES routine(name) ON DELETE CASCADE,
-    FOREIGN KEY(muscle_group_name) REFERENCES muscle_group(name) ON DELETE CASCADE
-);
-
 DELIMITER $$
 CREATE TRIGGER calculate_routine_metrics
 AFTER INSERT ON routine_exercise FOR EACH ROW
