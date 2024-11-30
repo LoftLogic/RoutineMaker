@@ -3,7 +3,7 @@ const { pool, getExercise, bookmarkExercise, removeExercise, getAllExercises, cr
     changeExercise, getRoutine, createRoutine, bookmarkRoutine, removeRoutine, updateRoutine,
     getExerciseMuscleFocus, createExerciseMuscleFocus, removeExerciseMuscleFocus, changeFocusLevel,
     createExerciseRoutine, getExerciseRoutine, removeExerciseRoutine, changeNumSets,
-    createEquipmentExercise, removeEquipmentExercise, getEquipmentExercise } = require('../database.js');
+    createEquipmentExercise, removeEquipmentExercise, getEquipmentExercise, getAllEquipmentForExercise } = require('../database.js');
 const mysql = require('mysql2');
 
 beforeAll(async () => {
@@ -270,4 +270,17 @@ it("Adding, removing, getting and updating equipmentExercise", async() => {
     await removeEquipmentExercise("Barbell", "Barbell Curl");
     const [after] = await getEquipmentExercise("Barbell", "Barbell Curl");
     expect(after).toBeUndefined();
+});
+
+it("Test getting all equipment", async() => {
+    await removeExercise("Incline Bench");
+    await createExercise("Incline Bench", 3, 3);
+    await createEquipmentExercise("Barbell", "Incline Bench");
+    await createEquipmentExercise("Bench", "Incline Bench");
+
+    const result = await getAllEquipmentForExercise("Incline Bench");
+    expect(result.includes("Bench") && result.includes("Barbell")).toBeTruthy();
+    await removeExercise("Incline Bench");
+    await removeEquipmentExercise("Incline Bench", "Barbell");
+    await removeEquipmentExercise("Incline Bench", "Bench");
 });

@@ -26,9 +26,6 @@ async function getExercise(name) {
 
 async function getAllExercises() {
     const [exercise] = await pool.query(`SELECT * FROM exercise`);
-    if (!exercise) {
-        console.log("Exercise not found")
-    }
     return exercise;
 }
 
@@ -50,7 +47,7 @@ async function removeExercise(name) {
 
 async function changeExercise(name, attributeToChange, newValue) {
     if (!["name", "difficulty", "time_estimate"].includes(attributeToChange)) {
-        console.log("Insert a proper name");
+        console.log("Insert a proper attribute");
         return undefined;
     }
     if (!await getExercise(name)) {
@@ -90,6 +87,11 @@ async function unbookmarkExercise(name) {
 
 async function getRoutine(name) {
     const [routine] = await pool.query(`SELECT * FROM routine WHERE name = ?`, [name]);
+    return routine;
+}
+
+async function getAllRoutines() {
+    const [routine] = await pool.query(`SELECT * FROM rooutine`);
     return routine;
 }
 
@@ -163,6 +165,11 @@ async function getExerciseRoutine(routine, exercise) {
     return result;
 }
 
+async function getAllExerciseRoutines() {
+    const [result] = await pool.query(`SELECT * FROM routine_exercise`);
+    return result;
+}
+
 async function removeExerciseRoutine(routine, exercise) {
     const [result] = await pool.query(`DELETE FROM routine_exercise WHERE routine_name = ? AND exercise_name = ?`,
     [routine, exercise]);
@@ -193,11 +200,27 @@ async function removeEquipmentExercise(equipment, exercise) {
     return result;
 }
 
+async function getAllEquipmentForExercise(exercise) {
+    var result = [];
+    const [exerciseEquipments] = await pool.query(`SELECT * FROM equipment_exercise WHERE exercise_name = ?`, [exercise]);
+    for (const entry of exerciseEquipments) {
+        if (entry['equipment_name'] && entry['equipment_name'] !== undefined) {
+            result.push(entry['equipment_name']);
+        }
+    }
+    return result;
+}
 
-
+async function getAllEquipment() {
+    const [result] = await pool.query(`SELECT * FROM equipment`);
+    return result;
+}
 
 module.exports = { pool, getExercise, getAllExercises, bookmarkExercise, createExercise, removeExercise, 
     changeExercise, getRoutine, createRoutine, bookmarkRoutine, removeRoutine, updateRoutine, 
     getExerciseMuscleFocus, createExerciseMuscleFocus, removeExerciseMuscleFocus, changeFocusLevel,
     createExerciseRoutine, getExerciseRoutine, removeExerciseRoutine, changeNumSets,
-    createEquipmentExercise, getEquipmentExercise, removeEquipmentExercise };
+    createEquipmentExercise, getEquipmentExercise, removeEquipmentExercise, getAllEquipmentForExercise,
+    getAllEquipment };
+
+

@@ -20,8 +20,8 @@ CREATE TABLE equipment_exercise (
     equipment_name VARCHAR(255) NOT NULL,
     exercise_name VARCHAR(255) NOT NULL,
     PRIMARY KEY (equipment_name, exercise_name),
-    FOREIGN KEY (equipment_name) REFERENCES equipment(name),
-    FOREIGN KEY (exercise_name) REFERENCES exercise(name)
+    FOREIGN KEY (equipment_name) REFERENCES equipment(name) ON DELETE CASCADE,
+    FOREIGN KEY (exercise_name) REFERENCES exercise(name) ON DELETE CASCADE
 );
 
 DROP TABLE IF EXISTS muscle_group;
@@ -102,9 +102,44 @@ END $$
 
 DELIMITER;
 
+INSERT INTO equipment (name) VALUES ('Bench');
+INSERT INTO equipment (name) VALUES ('Barbell');
+INSERT INTO equipment (name) VALUES ('Dumbell');
+
+INSERT INTO muscle_group(name) VALUES ('Chest');
+INSERT INTO muscle_group(name) VALUES ('Shoulder');
+INSERT INTO muscle_group(name) VALUES ('Tricep');
+INSERT INTO muscle_group(name) VALUES ('Bicep');
+INSERT INTO muscle_group(name) VALUES ('Back');
+INSERT INTO muscle_group(name) VALUES ('Legs');
+
+INSERT INTO muscle(name, muscle_group_name) VALUES ('Mid Chest', 'Chest');
+INSERT INTO muscle(name, muscle_group_name) VALUES ('Upper Chest', 'Chest');
+INSERT INTO muscle(name, muscle_group_name) VALUES ('Lower Chest', 'Chest');
+
+INSERT INTO muscle(name, muscle_group_name) VALUES ('Front Delt', 'Shoulder');
+INSERT INTO muscle(name, muscle_group_name) VALUES ('Side Delt', 'Shoulder');
+INSERT INTO muscle(name, muscle_group_name) VALUES ('Rear Delt', 'Shoulder');
+
+INSERT INTO muscle(name, muscle_group_name) VALUES ('Tricep Long Head', 'Tricep');
+INSERT INTO muscle(name, muscle_group_name) VALUES ('Tricep Lateral Head', 'Tricep');
+
+INSERT INTO muscle(name, muscle_group_name) VALUES ('Bicep Long Head', 'Bicep');
+INSERT INTO muscle(name, muscle_group_name) VALUES ('Bicep Short Head', 'Bicep');
+
+INSERT INTO muscle(name, muscle_group_name) VALUES ('Upper Back', 'Back');
+INSERT INTO muscle(name, muscle_group_name) VALUES ('Lats', 'Back');
+INSERT INTO muscle(name, muscle_group_name) VALUES ('Traps', 'Back');
+
+INSERT INTO muscle(name, muscle_group_name) VALUES ('Quads', 'Legs');
+INSERT INTO muscle(name, muscle_group_name) VALUES ('Hamstrings', 'Legs');
+INSERT INTO muscle(name, muscle_group_name) VALUES ('Glutes', 'Legs');
+INSERT INTO muscle(name, muscle_group_name) VALUES ('Calves', 'Legs');
+
+
 INSERT INTO exercise (name, difficulty, time_estimate) VALUES ('Bench Press', 4, 3);
-INSERT INTO exercise_muscle(exercise_name, muscle_name, focus) VALUES ('Bench Press', 'Mid Chest', 0.60)
+INSERT INTO exercise (name, difficulty, time_estimate) VALUES ('Bicep Curl', 2, 2);
+INSERT INTO exercise_muscle(exercise_name, muscle_name, focus) VALUES ('Bench Press', 'Mid Chest', 0.60);
 INSERT INTO exercise_muscle(exercise_name, muscle_name, focus) VALUES ('Bench Press', 'Tricep Long Head', 0.10);
 INSERT INTO exercise_muscle(exercise_name, muscle_name, focus) VALUES ('Bench Press', 'Tricep Lateral Head', 0.10);
 INSERT INTO exercise_muscle(exercise_name, muscle_name, focus) VALUES ('Bench Press', 'Front Delt', 0.20);
-INSERT INTO exercise (name, difficulty, time_estimate) VALUES ('Bicep Curl', 2, 2);

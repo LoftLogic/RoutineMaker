@@ -11,7 +11,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "mysql2": "^3.11.4"
+    "mysql2": "^3.11.4",
+    "readline-sync": "^1.4.10"
   },
   "devDependencies": {
     "express": "5.0.1",
