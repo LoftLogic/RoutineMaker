@@ -91,7 +91,7 @@ async function getRoutine(name) {
 }
 
 async function getAllRoutines() {
-    const [routine] = await pool.query(`SELECT * FROM rooutine`);
+    const [routine] = await pool.query(`SELECT * FROM routine`);
     return routine;
 }
 

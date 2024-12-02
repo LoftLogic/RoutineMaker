@@ -355,11 +355,66 @@ async function manageExercises() {
 }
 
 async function listAllRoutines() {
+    result = await getAllRoutines();
+    if (result) {
+        for (entry of result) {
+            console.log("\n")
+            console.log(entry["name"]);
+            console.log("Estimated Duration:", entry["est_duration"]);
+            console.log("Overall Intensity:", entry["overall_intensity"]);
+            var exercises = await getAllExercisesForRoutines(result['name']);
+            if (exercises && exercises.length > 0) {
+                console.log("Exercises belonging to", routine['name'],":");
+                exercises = exercises.f
+                for (var exercise of exercises) {
+                    if (exercise) {
+                        console.log
+                    }
+                }
+            } else {
+                console.log("Routine currently has no exercises");
+            }
+        }
+    }
+    else {
+        console.log("No routines found");
+    }
+    readlineSync.question("Press enter to continue... ");
+}
+
+async function userAddExerciseToRoutine() {
 
 }
 
-async function userCreateRoutine() {
 
+async function userCreateRoutine() {
+    while (true) {
+        console.log(bar + "CREATING ROUTINE" + bar);
+        var name = readlineSync.question("What is the name of the routine?: ");
+        if (name == 'q') { break; }
+        try {
+            var [initial] = await getRoutine(name);
+            if (initial) {
+                throw new Error();
+            }
+            await createRoutine(name);
+            var [after] = await getRoutine(name);
+            if (!after || !after['name']) {
+                throw new Error();
+            } 
+            console.log("New routine created with the name:", after['name']);
+            var addExercise = readlineSync.question("Would you like to add exercises to this routine? (y/n): ");
+            if (addExercise === 'y' || addExercise === 'Y') {
+                await userAddExerciseToRoutine();
+            }
+            var newRoutine = readlineSync.question("Would you like to add another routine? (y/n): ");
+            if (newRoutine !== 'y' && newRoutine !== 'Y') {
+                return;
+            }
+        } catch (err) {
+            console.log("An error occured: Make sure the name is new and unique");
+        }
+    }
 }
 
 async function userRemoveRoutine() {
@@ -381,7 +436,7 @@ async function manageRoutines() {
             "3 to remove a routine\n" +
             "4 to update a routine\n" +
             "5 to see a specific routine\n" +
-            "q to quit" 
+            "q to quit (at any point in the program)" 
         );
         var input = readlineSync.question("Enter your command: ");
         switch (input) {
@@ -398,7 +453,7 @@ async function manageRoutines() {
                 await userUpdateRoutine();
                 break;
             case ('5'):
-                var name = readlineSync.question("What is the name of the routine to get?");
+                var name = readlineSync.question("What is the name of the routine to get?: ");
                 var [routine] = await getRoutine(name);
                 if (routine) {
                     console.log(routine['name']);
@@ -418,8 +473,8 @@ async function manageRoutines() {
                     }
                 } else {
                     console.log("Error: Please make sure the given routine name exists");
-                    readlineSync.question("Press enter to continue... ");
                 }
+                readlineSync.question("Press enter to continue... ");
                 break;
             case ('q'):
             case ('Q'): 
@@ -435,10 +490,7 @@ async function main() {
         if (input === "E" || input === "e") {
             await manageExercises();
         } else if (input === "R" || input === "r") {
-            while (true) {
-                input = readlineSync.question("Press q to quit");
-                if (input == "Q") { break; }
-            }
+            await manageRoutines();
         } else if (input === "Q" || input === "q") {
             break;
         } else {
