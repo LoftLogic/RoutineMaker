@@ -20,16 +20,22 @@ const MUSCLEGROUPS = {
 
 async function listAllExercises() {
     result =  await getAllExercises();
-    if (result) {
+    if (result && result.length > 0) {
         for (entry of result) {
             console.log(entry["name"]);
             console.log("Difficulty (0-5): " + entry["difficulty"]);
             console.log("Time Estimate (0-5): " + entry["time_estimate"]);
-            console.log("Equipment Needed:");
-            for (equipment of await getAllEquipmentForExercise(entry["name"])) {
-                if (equipment['name'] !== undefined ) {
-                    console.log(equipment['name']);
+            var equipmentList = await getAllEquipmentForExercise(entry["name"]);
+            equipmentList = equipmentList.filter(x => x !== undefined);
+            if (equipmentList && equipmentList.length > 0) {
+                console.log("Equipment Needed:");
+                for (equipment of equipmentList) {
+                    if (equipment !== undefined ) {
+                        console.log(equipment);
+                    }
                 }
+            } else {
+                console.log("Exercise uses no equipment");
             }
             console.log("\n");
         }
@@ -424,15 +430,34 @@ async function userCreateRoutine() {
 
 
 async function userModifyRoutineExercises(routineName) {
-    var [routine] = getRoutine(routineName);
+    var [routine] = await getRoutine(routineName);
     if (!routine) {
         throw new Error();
     }
     while (true) {
         console.log(bar + "Modifying " + chalk.blue(routineName) + "'s exercises");
+        var exercises = await getAllExercises();
+        exercises = exercises.filter(x => x !== undefined);
+        if (exercises && exercises.length > 0) {
+            console.log("List of Exercises: ");
+            for (entry of exercises) {
+                console.log(entry["name"]);
+            }
+        }
+        console.log("\n");
+        var usedExercises = await getAllExercisesForRoutines(routineName);
+        usedExercises = usedExercises.filter(x => x !== undefined);
+        if (usedExercises && usedExercises.length > 0) {
+            console.log("List of exercises used by this routine: ");
+            for (entry of usedExercises) {
+                console.log(entry["name"]);
+            }
+        }
         console.log("Choose one of the following options:\n" + 
-            "" // ENDED HERE
+            "1 to see all exercises in this routine\n" +
+            "2 to see all "
         );
+        return;
     }
 }
 
