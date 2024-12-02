@@ -130,6 +130,17 @@ async function updateRoutine(name, newName) {
     return result;
 }
 
+async function changeSets(routine, exercise, newValue) {
+    const [before] = await getExerciseRoutine(routine, exercise);
+    if (!before) {
+        return undefined;
+    }
+    if (newValue <= 0 || newValue > 5) {
+        return undefined;
+    }
+    await pool.query(`UPDATE routine_exercise SET num_sets = ? WHERE routine_name = ? AND exercise_name = ?`, [newValue, routine, exercise]);
+}
+
 async function getExerciseMuscleFocus(exercise, muscle) {
     const [result] = await pool.query(`SELECT * FROM exercise_muscle WHERE exercise_name = ? AND muscle_name = ?`, 
         [exercise, muscle]);
@@ -217,7 +228,7 @@ async function getAllEquipment() {
 }
 
 module.exports = { pool, getExercise, getAllExercises, bookmarkExercise, createExercise, removeExercise, 
-    changeExercise, getRoutine, createRoutine, bookmarkRoutine, removeRoutine, updateRoutine, 
+    changeExercise, getRoutine, createRoutine, bookmarkRoutine, removeRoutine, updateRoutine, changeSets,
     getExerciseMuscleFocus, createExerciseMuscleFocus, removeExerciseMuscleFocus, changeFocusLevel,
     createExerciseRoutine, getExerciseRoutine, removeExerciseRoutine, changeNumSets,
     createEquipmentExercise, getEquipmentExercise, removeEquipmentExercise, getAllEquipmentForExercise,
