@@ -5,9 +5,18 @@ const { pool, getExercise, bookmarkExercise, removeExercise, getAllExercises, cr
     getExerciseMuscleFocus, createExerciseMuscleFocus, removeExerciseMuscleFocus, changeFocusLevel,
     createExerciseRoutine, getExerciseRoutine, removeExerciseRoutine, changeNumSets,
     createEquipmentExercise, removeEquipmentExercise, getEquipmentExercise, getAllEquipment,
-    getAllEquipmentForExercise } = require('./database.js');
+    getAllEquipmentForExercise, getAllRoutines, 
+    getAllExercisesForRoutines} = require('./database.js');
 
 const bar = "--------------";
+const MUSCLEGROUPS = {
+    "Chest": ["Mid Chest", "Upper Chest", "Lower Chest"], 
+    "Shoulder": ["Front Delt", "Side Delt", "Rear Delt"],
+    "Tricep": ["Tricep Long Head", "Tricep Lateral Head"],
+    "Bicep": ["Bicep Long Head", "Bicep Short Head"],
+    "Back": ["Upper Back", "Lats", "Traps"],
+    "Legs": ["Quads", "Hamstrings", "Glutes", "Calves"]
+};
 
 async function listAllExercises() {
     result =  await getAllExercises();
@@ -241,10 +250,36 @@ async function userUpdateExercise() {
                         break;
                     case ('Q'):
                     case ('q'):
-            
+                        break;
                     default:
                         console.log("Invalid input, try again");
                 }
+            default:
+                console.log("Not a valid command, try again");
+                readlineSync.question("Press enter to continue... ");
+        }
+    }
+}
+
+async function userRemoveExercise() {
+    while (true) {
+        console.log(bar + "Exercise Removal" + bar);
+        var name = readlineSync.question("which exercise would you like to remove?: ");
+        var [before] = await getExercise(name);
+        if (before === undefined) {
+            console.log("Name not recognized, please try again.");
+            continue;
+        }
+        await removeExercise(name);
+        var [result] = await getExercise(name);
+        try {
+            console.log(chalk.red(result) + " succesfully removed");
+            var response = readlineSync.question("Would you like to remove another exercise (y/n)?: ");
+            if (response !== "Y" && response !== 'y') {
+                return;
+            }
+        } catch (err) {
+            console.log("There was an error with removing the exercise, please try again");
         }
     }
 }
@@ -257,7 +292,8 @@ async function manageExercises() {
             "2 to create an exercise\n" +
             "3 to modify an exercise\n" +
             "4 to delete an exercise\n" +
-            "5 to see all equipment\n" +
+            "5 to see a specific exercise\n" +
+            "6 to see all equipment\n" +
             "q to quit (at any time in the program)"
          );
         var input = readlineSync.question("Enter your command: ");
@@ -274,6 +310,42 @@ async function manageExercises() {
             case ("3"):
                 await userUpdateExercise();
                 break;
+            case ("4"):
+                await userRemoveExercise();
+                break;
+            case ("5"):
+                var name = readlineSync.question("Enter the name of the exercise here: ");
+                var [exercise] = await getExercise(name);
+                if (exercise !== undefined) {
+                    console.log(exercise['name']);
+                    console.log("Difficulty (0-5): " + exercise['difficulty'] )
+                    console.log("Time Estimate (0-5): " + exercise['time_estimate']);
+                    var usedEquipment = await getAllEquipmentForExercise(name);
+                    usedEquipment = usedEquipment.filter(element => element !== undefined);
+                    if (usedEquipment.length === 0) {
+                        console.log("This exercise is not currently using any equipment");
+                    } else {
+                        console.log("This exercise is using the following equipment:");
+                        for (item of usedEquipment) {
+                            console.log(item);
+                        }
+                    }
+                } else {
+                    console.log("Name not recognized, please try again");
+                }
+                readlineSync.question("Press enter to continue... ");
+                break;
+        
+            case ('6'):
+                equipmentList = await getAllEquipment();
+                console.log("List of equipment: ")
+                for (item of equipmentList) {
+                    if (item !== undefined && item['name'] !== undefined) {
+                        console.log(item['name']);
+                    }
+                }
+                readlineSync.question("Press enter to continue... \n");
+                break;
             default:
                 console.log("Not a valid command, try again");
                 readlineSync.question("Press enter to continue... ");
@@ -281,6 +353,81 @@ async function manageExercises() {
         }
     }
 }
+
+async function listAllRoutines() {
+
+}
+
+async function userCreateRoutine() {
+
+}
+
+async function userRemoveRoutine() {
+
+}
+
+async function userUpdateRoutine() {
+
+}
+
+
+
+async function manageRoutines() {
+    while (true) {
+        console.log(bar + "Routine Management" + bar);
+        console.log("Choose one of the following options:\n" +
+            "1 to see all routines\n" +
+            "2 to add a new routine\n" +
+            "3 to remove a routine\n" +
+            "4 to update a routine\n" +
+            "5 to see a specific routine\n" +
+            "q to quit" 
+        );
+        var input = readlineSync.question("Enter your command: ");
+        switch (input) {
+            case ('1'):
+                await listAllRoutines();
+                break;
+            case ('2'):
+                await userCreateRoutine();
+                break;
+            case ('3'):
+                await userRemoveRoutine();
+                break;
+            case ('4'):
+                await userUpdateRoutine();
+                break;
+            case ('5'):
+                var name = readlineSync.question("What is the name of the routine to get?");
+                var [routine] = await getRoutine(name);
+                if (routine) {
+                    console.log(routine['name']);
+                    console.log("Est. Duration", routine['est_duration']);
+                    console.log("Difficulty:", routine['overall_intensity']);
+                    var exercises = await getAllExercisesForRoutines(routine['name']);
+                    if (exercises && exercises.length > 0) {
+                        console.log("Exercises belonging to", routine['name'],":");
+                        exercises = exercises.f
+                        for (var exercise of exercises) {
+                            if (exercise) {
+                                console.log
+                            }
+                        }
+                    } else {
+                        console.log("Routine currently has no exercises");
+                    }
+                } else {
+                    console.log("Error: Please make sure the given routine name exists");
+                    readlineSync.question("Press enter to continue... ");
+                }
+                break;
+            case ('q'):
+            case ('Q'): 
+                return;
+        }
+    }
+}
+
 
 async function main() {
     while (true) {

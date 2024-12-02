@@ -165,8 +165,8 @@ async function getExerciseRoutine(routine, exercise) {
     return result;
 }
 
-async function getAllExerciseRoutines() {
-    const [result] = await pool.query(`SELECT * FROM routine_exercise`);
+async function getAllExercisesForRoutines(routine) {
+    const [result] = await pool.query(`SELECT * FROM routine_exercise WHERE routine_name = ?`, [routine]);
     return result;
 }
 
@@ -221,6 +221,6 @@ module.exports = { pool, getExercise, getAllExercises, bookmarkExercise, createE
     getExerciseMuscleFocus, createExerciseMuscleFocus, removeExerciseMuscleFocus, changeFocusLevel,
     createExerciseRoutine, getExerciseRoutine, removeExerciseRoutine, changeNumSets,
     createEquipmentExercise, getEquipmentExercise, removeEquipmentExercise, getAllEquipmentForExercise,
-    getAllEquipment };
+    getAllEquipment, getAllRoutines, getAllExercisesForRoutines };
 
 
