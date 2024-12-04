@@ -24,7 +24,7 @@ async function listAllExercises() {
         for (entry of result) {
             console.log(entry["name"]);
             console.log("Difficulty (0-5): " + entry["difficulty"]);
-            console.log("Time Estimate (0-5): " + entry["time_estimate"]);
+            console.log("Time Estimate: " + entry["time_estimate"]);
             var equipmentList = await getAllEquipmentForExercise(entry["name"]);
             equipmentList = equipmentList.filter(x => x !== undefined);
             if (equipmentList && equipmentList.length > 0) {
@@ -211,7 +211,7 @@ async function userUpdateExercise() {
                     console.log("Name change succesful, exercise now is: ")
                     console.log(newExercise['name']);
                     console.log("Difficulty (0-5): " + newExercise['difficulty'] )
-                    console.log("Time Estimate (0-5): " + newExercise['time_estimate']);
+                    console.log("Time Estimate: " + newExercise['time_estimate']);
                 } catch (err) {
                     console.log("An error occured- make sure your new name doesn't already exist");
                     readlineSync.question("Press enter to continue... ");
@@ -225,7 +225,7 @@ async function userUpdateExercise() {
                     console.log("Difficulty change succesful, exercise now is: ")
                     console.log(newExercise['name']);
                     console.log("Difficulty (0-5): " + newExercise['difficulty']);
-                    console.log("Time Estimate (0-5): " + newExercise['time_estimate']);
+                    console.log("Time Estimate: " + newExercise['time_estimate']);
                 } catch (err) {
                     console.log("An error occured- make sure your new value is between 1 and 5");
                     readlineSync.question("Press enter to continue... ");
@@ -239,9 +239,9 @@ async function userUpdateExercise() {
                     console.log("Difficulty change succesful, exercise now is: ");
                     console.log(newExercise['name']);
                     console.log("Difficulty (0-5): " + newExercise['difficulty']);
-                    console.log("Time Estimate (0-5): " + newExercise['time_estimate']);
+                    console.log("Time Estimate: " + newExercise['time_estimate']);
                 } catch (err) {
-                    console.log("An error occured- make sure your new value is between 1 and 5");
+                    console.log("An error occured- make sure your new value is above 0");
                     readlineSync.question("Press enter to continue... ");
                 }
                 break;
@@ -286,7 +286,7 @@ async function userRemoveExercise() {
             readlineSync.question("Press enter to continue... ");
             continue;
         }
-        console.log(name + " succesfully removed");
+        console.log(chalk.red(name) + " succesfully removed");
         var response = readlineSync.question("Would you like to remove another exercise (y/n)?: ");
         if (response !== "Y" && response !== 'y') {
             return;
@@ -329,7 +329,7 @@ async function manageExercises() {
                 if (exercise !== undefined) {
                     console.log(exercise['name']);
                     console.log("Difficulty (0-5): " + exercise['difficulty'] )
-                    console.log("Time Estimate (0-5): " + exercise['time_estimate']);
+                    console.log("Time Estimate: " + exercise['time_estimate']);
                     var usedEquipment = await getAllEquipmentForExercise(name);
                     usedEquipment = usedEquipment.filter(element => element !== undefined);
                     if (usedEquipment.length === 0) {
@@ -375,12 +375,11 @@ async function listAllRoutines() {
             var exercises = await getAllExercisesForRoutines(entry['name']);
             exercises = exercises.filter(entry => entry !== undefined);
             if (exercises && exercises.length > 0) {
-                console.log("Exercises belonging to", entry['name'],":");
+                console.log("Exercises belonging to", entry['name'] + ":");
                 for (var exercise of exercises) {
                     if (exercise) {
                         console.log(exercise['exercise_name']);
                         console.log("Num Sets:", exercise['num_sets']);
-                        console.log("\n");
                     }
                 }
             } else {
@@ -394,9 +393,40 @@ async function listAllRoutines() {
     readlineSync.question("Press enter to continue... ");
 }
 
-async function userAddExerciseToRoutine() {
-}
 
+async function userAddExerciseToRoutine(routineName) {
+    var [routine] = await getRoutine(routineName);
+    if (!routine) {
+        throw new Error();
+    }
+    while (true) {
+        try {
+            console.log(bar + "Adding exercise to", chalk.blue(routineName) + bar);
+            var name = readlineSync.question("What exercise would you like to add? ");
+            if (name === 'q' || name === 'Q') { return; }
+            var [exercise] = await getExercise(name);
+            if (!exercise) {
+                throw new Error();
+            }
+            var numSets = readlineSync.question("How many sets of this exercise? ");
+            if (numSets === 'q' || name === 'Q') { return; }
+            if (numSets < 1) { throw new Error(); }
+            await createExerciseRoutine(routineName, name, numSets);
+            var [after] = await getExerciseRoutine(routineName, name);
+            if (!after || !after['routine_name'] || !after['exercise_name']) {
+                throw new Error();
+            }
+            console.log("Succesfully added " + chalk.blue(name) + " to " + chalk.magenta(routineName) + " with " + chalk.red(numSets) + " sets");
+            var addAnother = readlineSync.question("Would you like to add another exercise (y/n)?: ");
+            if (addAnother !== 'Y' && addAnother !== 'y') {
+                return;
+            }
+        } catch (err) {
+            console.log("An error occured- make sure the name you give exists and the number of sets is above 0");
+            readlineSync.question("Press enter to continue... ");
+        }
+    }
+}
 
 async function userCreateRoutine() {
     while (true) {
@@ -416,7 +446,7 @@ async function userCreateRoutine() {
             console.log("New routine created with the name:", chalk.blue(after['name']));
             var addExercise = readlineSync.question("Would you like to add exercises to this routine? (y/n): ");
             if (addExercise === 'y' || addExercise === 'Y') {
-                await userAddExerciseToRoutine();
+                await userAddExerciseToRoutine(after['name']);
             }
             var newRoutine = readlineSync.question("Would you like to add another routine? (y/n): ");
             if (newRoutine !== 'y' && newRoutine !== 'Y') {
@@ -429,35 +459,88 @@ async function userCreateRoutine() {
 }
 
 
-async function userModifyRoutineExercises(routineName) {
+async function userRemoveExerciseFromRoutine(routineName) {
     var [routine] = await getRoutine(routineName);
     if (!routine) {
         throw new Error();
     }
     while (true) {
-        console.log(bar + "Modifying " + chalk.blue(routineName) + "'s exercises");
+        try {
+            console.log(bar + "Removing exercise from", chalk.red(routineName) + bar);
+            var name = readlineSync.question("What exercise would you like to remove? ");
+            if (name === 'q' || name === 'Q') { return; }
+            var exercise = await getExerciseRoutine(routineName, name);
+            if (!exercise || exercise.length === 0) {
+                throw new Error("Exercise not found");
+            }
+            await removeExerciseRoutine(routineName, name);
+            var [after] = await getExerciseRoutine(routineName, name);
+            if (after && after['routine_name'] && after['exercise_name']) {
+                throw new Error("Exercise unsuccesfully removed");
+            }
+            console.log("Succesfully removed " + chalk.red(name) + " from " + chalk.blue(routineName));
+            var removeAnother = readlineSync.question("Would you like to remove another exercise (y/n)?: ");
+            if (removeAnother !== 'Y' && removeAnother !== 'y') {
+                return;
+            }
+        } catch (err) {
+            console.log("An error occured- make sure exercise is actually used by this exercise");
+            readlineSync.question("Press enter to continue... ");
+        }
+    }
+}
+
+
+// MAY NEED TO DEAL WITH THE WHILE LOOP HERE IN A WEIRD WAY
+async function userModifyRoutineExercises(routineName) {
+    while (true) {
+        var [routine] = await getRoutine(routineName);
+        if (!routine) {
+            throw new Error();
+        }
+        console.log(bar + "Modifying " + chalk.blue(routineName) + chalk.blue("'s") + " exercises");
         var exercises = await getAllExercises();
         exercises = exercises.filter(x => x !== undefined);
         if (exercises && exercises.length > 0) {
-            console.log("List of Exercises: ");
+            console.log("List of Exercises (in the database): ");
             for (entry of exercises) {
-                console.log(entry["name"]);
+                console.log(entry['name']);
             }
         }
-        console.log("\n");
         var usedExercises = await getAllExercisesForRoutines(routineName);
         usedExercises = usedExercises.filter(x => x !== undefined);
         if (usedExercises && usedExercises.length > 0) {
             console.log("List of exercises used by this routine: ");
             for (entry of usedExercises) {
-                console.log(entry["name"]);
+                console.log(entry['exercise_name'], "with", chalk.green(entry['num_sets']), "sets");
             }
         }
+        else {
+            console.log("This routine is not using any exercises");
+            console.log("\n")
+        }
         console.log("Choose one of the following options:\n" + 
-            "1 to see all exercises in this routine\n" +
-            "2 to see all "
+            "1 to add an exercise to this routine\n" +
+            "2 to remove an exercise to this routine\n" + 
+            "3 to change the number of sets of an exercise" +
+            "q to quit"
         );
-        return;
+        var input = readlineSync.question("Enter your command here: ");
+        if (input === 'q' || input === 'Q') { return; }
+        else if (input === '1') {
+            await userAddExerciseToRoutine(routineName);
+        } else if (input === '2') {
+            await userRemoveExerciseFromRoutine(routineName);
+        } else if (input === '3') {
+
+        }
+        else {
+            console.log("Unrecognized input, please try again");
+        }
+        var addMore = readlineSync.question("Would you like to modify this routine more? (y/n): ");
+        if (addMore !== 'y' && addMore !== 'Y') {
+            return;
+        }
     }
 }
 
@@ -489,7 +572,11 @@ async function userUpdateRoutine() {
                     try {
                         await updateRoutine(name, newName);
                         var [after] = await getRoutine(newName);
-                        console.log(after);
+                        var exercises = await getAllExercisesForRoutines(routine['name']);
+                        exercises = exercises.filter(entry => entry !== undefined);
+                        for (var exercise of exercises) {
+                            await userAddExerciseToRoutine(exercise['exercise_name']);
+                        }
                         if (after) {
                             console.log(chalk.red(name) + " succesfully renamed to " + chalk.blue(after['name']));
                             break;
@@ -577,12 +664,14 @@ async function manageRoutines() {
                     console.log("Est. Duration", routine['est_duration']);
                     console.log("Difficulty:", routine['overall_intensity']);
                     var exercises = await getAllExercisesForRoutines(routine['name']);
+                    console.log(exercises);
                     if (exercises && exercises.length > 0) {
-                        console.log("Exercises belonging to", routine['name'],":");
+                        console.log("Exercises belonging to", chalk.blue(routine['name']) + ":");
+                        console.log("\n");
                         exercises = exercises.filter(entry => entry !== undefined);
                         for (var exercise of exercises) {
                             if (exercise) {
-                                console.log
+                                console.log(exercise['exercise_name']);
                             }
                         }
                     } else {
