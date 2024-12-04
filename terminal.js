@@ -8,6 +8,7 @@ const { pool, getExercise, bookmarkExercise, removeExercise, getAllExercises, cr
     getAllEquipmentForExercise, getAllRoutines, 
     getAllExercisesForRoutines} = require('./database.js');
 
+var advanced = false;
 const bar = "--------------";
 const MUSCLEGROUPS = {
     "Chest": ["Mid Chest", "Upper Chest", "Lower Chest"], 
@@ -23,8 +24,10 @@ async function listAllExercises() {
     if (result && result.length > 0) {
         for (entry of result) {
             console.log(entry["name"]);
-            console.log("Difficulty (0-5): " + entry["difficulty"]);
-            console.log("Time Estimate: " + entry["time_estimate"]);
+            if (advanced) {
+                console.log("Difficulty (1-5): " + entry["difficulty"]);
+                console.log("Time Estimate: " + entry["time_estimate"]);
+            }
             var equipmentList = await getAllEquipmentForExercise(entry["name"]);
             equipmentList = equipmentList.filter(x => x !== undefined);
             if (equipmentList && equipmentList.length > 0) {
@@ -151,9 +154,16 @@ async function userCreateExercise() {
         console.log("Enter the details of the exercise you want to create (or q to quit)");
         var name = readlineSync.question("What is the name of the exercise? ");
         if (name == 'q') { break }
-        var diff = readlineSync.question("What is the difficulty rating of this exericse (1-5)? ");
+        if (advanced) {
+            var diff = readlineSync.question("What is the difficulty rating of this exericse (1-5)? ");
+        } else {
+            diff = 1;
+        }
         if (diff == 'q') { break }
-        var time = readlineSync.question("How many minutes a does a set take (1-5)? ");
+        var time = readlineSync.question("How many minutes a does a set take? ");
+        if (advanced) {
+            var time = 1;
+        }
         if (time == 'q') { break }
         try {
             var [initial] = await getExercise(name);
@@ -165,8 +175,13 @@ async function userCreateExercise() {
             if (!result['name'] || !result['difficulty'] || !result['time_estimate']) {
                 throw new Error("Bad user input");
             }
-            console.log("New succesfully exercise created with the name ", chalk.blue(result['name']),
+            if (advanced) {
+                console.log("New succesfully exercise created with the name ", chalk.blue(result['name']),
                 "with difficulty rating of", result['difficulty'], "and takes", result['time_estimate'], "minutes");
+            } else {
+                console.log("New succesfully exercise created with the name ", chalk.blue(result['name']));
+            }
+            
             var newEquipment = readlineSync.question("Does this exercise require equipment? (y/n): ");
             if (newEquipment === 'y' || newEquipment === 'Y') {
                 await userCreateEquipmentExercise(name);
@@ -192,12 +207,20 @@ async function userUpdateExercise() {
             console.log("Name not recognzied- please try again");
             continue;
         }
-        console.log("Choose one of the following options\n" +
+        if (advanced) {
+            var str = "Choose one of the following options\n" +
             "1 to change the name\n" +
-            "2 to change the difficulty\n" +
-            "3 to change the time estiamte\n" +
-            "4 to change the equipment used\n" +
-            "q to quit");
+            "2 to change the equipment used\n" +
+            "3 to change the difficulty\n" +
+            "4 to change the time estiamte\n" +
+            "q to quit";
+        } else {
+            var str = "Choose one of the following options\n" +
+            "1 to change the name\n" +
+            "2 to change the equipment used\n" +
+            "q to quit";
+        }
+        console.log(str);
         var command = readlineSync.question("Enter your command here: ");
         switch (command) {
             case ('q'):
@@ -206,46 +229,21 @@ async function userUpdateExercise() {
             case ('1'):
                 var newName = readlineSync.question("What is the new name to use? ");
                 try {
+                    var equipmentLs = await getAllEquipmentForExercise(name);
                     await changeExercise(name, "name", newName);
                     var [newExercise] = await getExercise(newName);
-                    console.log("Name change succesful, exercise now is: ")
-                    console.log(newExercise['name']);
-                    console.log("Difficulty (0-5): " + newExercise['difficulty'] )
-                    console.log("Time Estimate: " + newExercise['time_estimate']);
+                    console.log(chalk.blue(name), "succesfully renamed to", chalk.blue(newName));
+                    if (equipmentLs && equipmentLs.length > 0) {
+                        for (var equipment of equipmentLs) {
+                            await createEquipmentExercise(equipment, newName);
+                        }
+                    }
                 } catch (err) {
                     console.log("An error occured- make sure your new name doesn't already exist");
                     readlineSync.question("Press enter to continue... ");
                 }
                 break;
             case ('2'):
-                var newDifficulty = readlineSync.question("What is the new difficulty value?: ");
-                try {
-                    await changeExercise(name, "difficulty", newDifficulty);
-                    var [newExercise] = await getExercise(name);
-                    console.log("Difficulty change succesful, exercise now is: ")
-                    console.log(newExercise['name']);
-                    console.log("Difficulty (0-5): " + newExercise['difficulty']);
-                    console.log("Time Estimate: " + newExercise['time_estimate']);
-                } catch (err) {
-                    console.log("An error occured- make sure your new value is between 1 and 5");
-                    readlineSync.question("Press enter to continue... ");
-                }
-                break;
-            case ('3'):
-                var newTime = readlineSync.question("What is the new time estimate value?: ");
-                try {
-                    await changeExercise(name, "time_estimate", newTime);
-                    var [newExercise] = await getExercise(name);
-                    console.log("Difficulty change succesful, exercise now is: ");
-                    console.log(newExercise['name']);
-                    console.log("Difficulty (0-5): " + newExercise['difficulty']);
-                    console.log("Time Estimate: " + newExercise['time_estimate']);
-                } catch (err) {
-                    console.log("An error occured- make sure your new value is above 0");
-                    readlineSync.question("Press enter to continue... ");
-                }
-                break;
-            case ('4'):
                 var addOrRemove = readlineSync.question("Enter 1 to add equipment, 2 to remove, or q to quit: ");
                 switch (addOrRemove) {
                     case ('1'):
@@ -261,6 +259,38 @@ async function userUpdateExercise() {
                         console.log("Invalid input, try again");
                 }
                 break;
+            case ('3'):
+                if (advanced) {
+                    var newDifficulty = readlineSync.question("What is the new difficulty value?: ");
+                    try {
+                        await changeExercise(name, "difficulty", newDifficulty);
+                        var [newExercise] = await getExercise(name);
+                        console.log("Difficulty change succesful, exercise now is: ")
+                        console.log(newExercise['name']);
+                        console.log("Difficulty (1-5): " + newExercise['difficulty']);
+                        console.log("Time Estimate: " + newExercise['time_estimate']);
+                    } catch (err) {
+                        console.log("An error occured- make sure your new value is between 1 and 5");
+                        readlineSync.question("Press enter to continue... ");
+                    }
+                    break;
+                }
+            case ('4'):
+                if (advanced) {
+                    var newTime = readlineSync.question("What is the new time estimate value?: ");
+                    try {
+                        await changeExercise(name, "time_estimate", newTime);
+                        var [newExercise] = await getExercise(name);
+                        console.log("Difficulty change succesful, exercise now is: ");
+                        console.log(newExercise['name']);
+                        console.log("Difficulty (1-5): " + newExercise['difficulty']);
+                        console.log("Time Estimate: " + newExercise['time_estimate']);
+                    } catch (err) {
+                        console.log("An error occured- make sure your new value is above 0");
+                        readlineSync.question("Press enter to continue... ");
+                    }
+                    break;
+                }
             default:
                 console.log("Not a valid command, try again");
                 readlineSync.question("Press enter to continue... ");
@@ -328,8 +358,10 @@ async function manageExercises() {
                 var [exercise] = await getExercise(name);
                 if (exercise !== undefined) {
                     console.log(exercise['name']);
-                    console.log("Difficulty (0-5): " + exercise['difficulty'] )
-                    console.log("Time Estimate: " + exercise['time_estimate']);
+                    if (advanced) {
+                        console.log("Difficulty (1-5): " + exercise['difficulty']);
+                        console.log("Time Estimate: " + exercise['time_estimate']);
+                    }
                     var usedEquipment = await getAllEquipmentForExercise(name);
                     usedEquipment = usedEquipment.filter(element => element !== undefined);
                     if (usedEquipment.length === 0) {
@@ -570,12 +602,12 @@ async function userUpdateRoutine() {
                     var newName = readlineSync.question("What is the new name of this routine? (or q to quit): ");
                     if (newName === 'q' || newName === 'Q') { break; }
                     try {
+                        var exercises = await getAllExercisesForRoutines(name);
                         await updateRoutine(name, newName);
                         var [after] = await getRoutine(newName);
-                        var exercises = await getAllExercisesForRoutines(routine['name']);
                         exercises = exercises.filter(entry => entry !== undefined);
                         for (var exercise of exercises) {
-                            await userAddExerciseToRoutine(exercise['exercise_name']);
+                            await createExerciseRoutine(newName, exercise["exercise_name"], exercise["num_sets"]);
                         }
                         if (after) {
                             console.log(chalk.red(name) + " succesfully renamed to " + chalk.blue(after['name']));
@@ -664,7 +696,6 @@ async function manageRoutines() {
                     console.log("Est. Duration", routine['est_duration']);
                     console.log("Difficulty:", routine['overall_intensity']);
                     var exercises = await getAllExercisesForRoutines(routine['name']);
-                    console.log(exercises);
                     if (exercises && exercises.length > 0) {
                         console.log("Exercises belonging to", chalk.blue(routine['name']) + ":");
                         console.log("\n");
@@ -690,7 +721,7 @@ async function manageRoutines() {
 }
 
 
-async function main() {
+async function start() {
     while (true) {
         var input = readlineSync.question("Press e to open exercises, r to open routines, or q to quit: ");
         if (input === "E" || input === "e") {
@@ -703,8 +734,30 @@ async function main() {
             console.log("Not a valid command, please try again. ");
         }
     }
-    console.log("Goodbye!");
-    process.exit(0);
+}
+
+async function main() {
+    while (true) {
+        console.log(bar + chalk.magenta("Gym Routine Manager") + bar);
+        console.log("Basic Mode allows you to create exercises and add them to your routine (recommended for casual lifters)");
+        console.log("Advanced Mode allows you to see intensity, duration, and muscle targeting (recommended for advanced lifters)");
+        var input = readlineSync.question("Press 1 to enter basic mode, 2 to enter advanced mode, or q to quit: ");
+        if (input === '1') {
+            advanced = false;
+            console.log("Entering basic mode... ");
+        } else if (input === '2') {
+            console.log("Entering advanced mode... ");
+            advanced = true;
+        }
+        else if (input === 'q' || input === 'Q') {
+            console.log("Goodbye!");
+            process.exit(0);
+        } else {
+            console.log("Unknown input- entering basic mode by default... ");
+            advanced = false;
+        }
+        await start();
+    }
 }
 
 (async () => {

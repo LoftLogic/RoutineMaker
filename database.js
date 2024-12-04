@@ -227,6 +227,17 @@ async function getAllEquipment() {
     return result;
 }
 
+async function neededEquipment(routineName) {
+    const equipment = new Set();
+    let exercises = await getAllExercisesForRoutines();
+    exercises = exercises.filter(x => x !== undefined);
+    if (exercises && exercises.length > 0) {
+
+        equipment.add(); 
+    }
+    return equipment;
+}
+
 module.exports = { pool, getExercise, getAllExercises, bookmarkExercise, createExercise, removeExercise, 
     changeExercise, getRoutine, createRoutine, bookmarkRoutine, removeRoutine, updateRoutine, changeSets,
     getExerciseMuscleFocus, createExerciseMuscleFocus, removeExerciseMuscleFocus, changeFocusLevel,

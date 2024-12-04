@@ -143,7 +143,6 @@ INSERT INTO muscle(name, muscle_group_name) VALUES ('Calves', 'Legs');
 
 INSERT INTO exercise (name, difficulty, time_estimate) VALUES ('Bench Press', 4, 3);
 INSERT INTO exercise (name, difficulty, time_estimate) VALUES ('Bicep Curl', 2, 2);
-INSERT INTO exercise_muscle(exercise_name, muscle_name, focus) VALUES ('Bench Press', 'Mid Chest', 0.60);
-INSERT INTO exercise_muscle(exercise_name, muscle_name, focus) VALUES ('Bench Press', 'Tricep Long Head', 0.10);
-INSERT INTO exercise_muscle(exercise_name, muscle_name, focus) VALUES ('Bench Press', 'Tricep Lateral Head', 0.10);
-INSERT INTO exercise_muscle(exercise_name, muscle_name, focus) VALUES ('Bench Press', 'Front Delt', 0.20);
+
+INSERT INTO routine (name) VALUES ('Push');
+INSERT INTO routine_exercise (name) VALUES ('Push', 'Bench Press', 3);
